@@ -1,10 +1,18 @@
 {
-  "date": "2026-10-07",
-  "label": "10月7日 周三",
-  "key": "hw-list-2026-10-07",
-  "photo": "",
+  "date": "YYYY-MM-DD",
+  "label": "M月D日 周X",
+  "key": "hw-list-YYYY-MM-DD",
+  "photo": "photos/YYYY-MM-DD.jpg",
   "items": [
-    { "text": "在这里填作业内容", "subject": "语文", "done": false },
-    { "text": "在这里填作业内容", "subject": "数学", "done": false }
+    {
+      "text": "作业内容",
+      "subject": "语文",
+      "done": false
+    },
+    {
+      "text": "作业内容",
+      "subject": "数学",
+      "done": false
+    }
   ]
 }

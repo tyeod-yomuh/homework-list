@@ -1,152 +1,112 @@
-# 📚 作业清单（Homework List）
+# 作业清单 · Homework List
 
-一个**每天自动更新的作业管理小网站**：每晚把当天的各科作业整理成可勾选的清单，写一项划一项，还有"推荐下一个写什么"帮你安排顺序。
+每天自动更新的初中作业管理工具：网页 + Android App（含桌面小组件），作业写一项划一项。
 
-👉 **线上地址：https://tyeod-yomuh.github.io/homework-list/**
+- 🌐 网页：<https://tyeod-yomuh.github.io/homework-list/>
+- 📱 App：Android 原生壳 + WebView 界面，见 [`apk/`](apk/)
 
 ---
 
-## ✨ 功能一览
+## 功能
 
 | 功能 | 说明 |
 |---|---|
-| 🌙 深色模式 | 纯深色界面，晚上写作业不刺眼 |
-| 🗂 科目归类 | 语文 / 数学 / 英语 / 历史 / 政治 / 化学 / 物理，同一科的作业永远排在一起 |
-| ✅ 勾选划掉 | 每个作业带复选框，点一下划掉，顶部实时显示"已完成 X / Y 项" |
-| 🎯 推荐下一个 | 自动推荐"下一个写什么"：默认同科目先写完，也可切随机、或指定某一科 |
-| ⏭ 暂时跳过 | 推荐区里对不想写的作业点"跳过"，它会被放到列表底部变淡，不再被推荐 |
-| 📷 作业原图 | 每天的作业照片直接显示在网页上，防止文字整理认错 |
-| 🗓 每日存档 | 每天一个独立数据文件（`data/2026-10-XX.json`），历史只增不改，勾选进度按天分开 |
-| 📱 手机友好 | 手机上打开直接能用，支持手动添加 / 删除作业条目 |
+| 科目归类 | 语文 / 数学 / 英语 / 物理 / 化学 / 生物 / 历史 / 政治，同科作业排在一起并带科目标签 |
+| 勾选划掉 | 每条带复选框，点一下划掉，顶部实时统计「已完成 X / Y」 |
+| 推荐下一个 | 优先推荐同科未完成项，可切「随机」或指定某一科 |
+| 随机抽一项 | 一键随机挑一条未完成作业 |
+| 增删条目 | 手机上可手动添加、编辑、删除作业 |
+| 作业原图 | 当天便签照片直接显示，防止文字整理出错 |
+| 每日存档 | 一天一个 JSON，历史只增不改，勾选进度按天独立 |
+| 桌面小组件 | 2×2 小组件直接看剩余作业 / 随机抽一项，点击可刷新 |
+| 三源取数 | jsDelivr → GitHub Raw → Pages 自动切换，国内网络也能拉到数据 |
+| 深色模式 | 纯深色界面，夜间不刺眼 |
 
 ---
 
-## 🗂 目录结构
+## 目录结构
 
 ```
 homework-list/
-├── index.html            ← 网页模板（通用，不存任何作业数据，每天自动读取 latest.json）
-├── README.md             ← 本说明
-├── favicon.png           ← 网站小图标（Apple emoji 风格）
-├── data/                 ← ★ 所有作业数据 ★
-│   ├── latest.json       ← "当天"数据：网页只读它（每晚更新为最新一天）
-│   ├── 2026-10-15.json   ← 历史存档：每天一个新文件，只增不改
-│   ├── 2026-10-20.json   ← （每天新建一个这种文件）
-│   └── _template.json    ← 空模板，方便人工手动建 JSON
-├── photos/               ← 作业照片
-│   └── 2026-10-15.jpg    ← 每天一张，文件名按日期
-└── dev.html              ← 开发调试页（不用管）
+├── index.html              # 网页应用入口（GitHub Pages），不含数据，运行时读 data/latest.json
+├── favicon.png             # 站点图标
+├── .nojekyll               # 关闭 Jekyll 处理，保证文件按原样发布
+├── LICENSE                 # MIT
+├── data/                   # ★ 全部作业数据
+│   ├── latest.json         # 当天清单（网页 / App 只读它）
+│   ├── _template.json      # 空模板（下划线开头，不参与校验）
+│   └── YYYY-MM-DD.json     # 每日存档，同日第二次作业用 -b 后缀
+├── photos/                 # 作业原图，YYYY-MM-DD.jpg
+├── scripts/
+│   └── validate_data.py    # 数据校验脚本
+├── docs/
+│   ├── data-schema.md      # 数据格式规范
+│   └── archive/            # 历史遗留页面归档
+└── apk/                    # Android 源码（无需 Gradle，纯命令行构建）
+    ├── AndroidManifest.xml
+    ├── assets/index.html   # 壳内界面（含离线兜底数据）
+    ├── res/                # 图标、布局、小组件资源
+    ├── src/                # MainActivity + WidgetProvider
+    └── build.sh            # aapt2 + javac + d8 + apksigner 一键打包
 ```
-
-**核心规则（4 条铁律）**
-1. 每天新建 `data/2026-10-XX.json` 存当天作业，历史文件**永远不覆盖、不删除**。
-2. 把当天内容**完整复制**到 `data/latest.json`（网页只读它）。
-3. 照片压缩后存 `photos/2026-10-XX.jpg`，并在 json 的 `photo` 字段填路径。
-4. 每天换新 `key`（勾选进度隔离，防止跨天串数据）。
 
 ---
 
-## 🕗 每晚例行流程（谁在维护）
+## 数据规范
 
-每晚 **21:00** 定时任务自动触发 → 向你索要当天作业 → 你发照片或打字 → 自动完成：
+完整格式见 [`docs/data-schema.md`](docs/data-schema.md)。核心约定：
 
+- 一天一个文件 `data/YYYY-MM-DD.json`，`data/latest.json` 与最新一天内容保持一致
+- 必填字段 `date` / `label` / `key` / `photo` / `items`
+- `key = hw-list-YYYY-MM-DD`（同日多份加 `-b`），是客户端勾选进度的命名空间，**修正数据时不要改 key**
+- 提交前跑校验：
+
+```bash
+python3 scripts/validate_data.py --strict
 ```
-收到作业 → 新建 data/2026-10-XX.json → 覆盖 data/latest.json
-        → 压缩照片到 photos/ → 校验 JSON → git push → 1-2 分钟后网页自动更新
-```
-
-如果你某天没发作业：网站**不会报错、不会跳转**，保持显示最后一次更新的清单。
 
 ---
 
-## 📝 数据格式（人工手动维护手册）
+## 每日更新流程
 
-网页本身不存作业，**维护网站 = 维护 JSON 数据文件**。以下是完整字段说明。
+1. 收到当天作业（文字或照片）
+2. 新建 `data/YYYY-MM-DD.json`（参照 `_template.json`），`items` 的 `done` 一律 `false`
+3. 照片压缩后存为 `photos/YYYY-MM-DD.jpg`（短边 1200px、JPEG 质量 80）
+4. `cp data/YYYY-MM-DD.json data/latest.json`
+5. 运行 `python3 scripts/validate_data.py --strict`
+6. 提交推送：
 
-### 一个完整的当天文件长这样
-
-```json
-{
-  "date": "2026-10-20",
-  "label": "10月20日 周二",
-  "key": "hw-list-2026-10-20",
-  "photo": "photos/2026-10-20.jpg",
-  "items": [
-    { "text": "基础训练 114、115 到湖心亭结束", "subject": "语文", "done": false },
-    { "text": "基础训练往后写两页", "subject": "数学", "done": false }
-  ]
-}
+```bash
+git add -A && git commit -m "update: 作业清单 M/D 周X" && git push origin main
 ```
 
-### 字段逐条翻译
+7. GitHub Pages 约 1–2 分钟自动更新
 
-| 字段 | 填什么 | 例子 | 注意 |
-|---|---|---|---|
-| `date` | 当天日期，格式 `年-月-日` | `"2026-10-20"` | 和文件名里的日期一致 |
-| `label` | 网页标题旁显示的那行字 | `"10月20日 周二"` | 建议带上星期几 |
-| `key` | 勾选进度的"钥匙"，**每天必须换新** | `"hw-list-2026-10-20"` | 两天用同一个 key 勾选进度会互相串！ |
-| `photo` | 作业原图路径；没照片填 `""` | `"photos/2026-10-20.jpg"` 或 `""` | 路径和文件名要一字不差 |
-| `items` | 作业列表，每项用 `{ }` 包起来，逗号隔开 | 见下 | 没作业就写 `[]` |
+---
 
-### 每一项作业（必须有 3 个字段）
+## 数据读取
 
-```json
-{ "text": "试卷×1", "subject": "数学", "done": false }
+网页与 App 按顺序尝试，任一成功即渲染，全部失败才用内置兜底数据：
+
+1. `https://cdn.jsdelivr.net/gh/tyeod-yomuh/homework-list@main/data/latest.json`
+2. `https://raw.githubusercontent.com/tyeod-yomuh/homework-list/main/data/latest.json`
+3. `https://tyeod-yomuh.github.io/homework-list/data/latest.json`
+
+每个源超时 9 秒后自动切换下一个。
+
+---
+
+## 构建 APK
+
+```bash
+cd apk
+bash build.sh
 ```
 
-| 字段 | 填什么 | 注意 |
-|---|---|---|
-| `text` | 作业内容，写人话 | 值两边用**英文引号** `"` |
-| `subject` | 科目，**只能填这 7 个字之一**：`语文` `数学` `英语` `历史` `政治` `化学` `物理` | 填别的字网页分组会乱 |
-| `done` | 做完了没，`true` 或 `false` | 每天新文件全写 `false`，让用户自己勾 |
-
-**易错点：**
-- 两项之间用英文逗号 `,` 隔开，**最后一项后面不要加逗号**。
-- `true` / `false` 是小写、**没有引号**；`text` / `subject` 的值要加引号。
-- 全程用英文引号 `"`，不能用中文引号 `“”`。
-
-### 照片怎么放
-
-1. 压缩到宽 1200px、JPEG 质量 80 左右（几十 KB，网页打开快）。
-2. 存 `photos/`，文件名按日期：`2026-10-20.jpg`。
-3. json 的 `photo` 填 `"photos/2026-10-20.jpg"`。
-4. 网页顶部会出现「📷 作业原图」。
-
-没照片：`photo` 填 `""`，网页自动隐藏照片卡片。
-
-### 提交前必做检查
-
-写完任何 json 先校验：`python3 -m json.tool 文件.json`，不报错就是好的（也可用 jsonlint.com 网页校验）。
-
-**常见错误自查表：**
-
-| 症状 | 原因 | 怎么改 |
-|---|---|---|
-| 网页显示"拉不到作业数据" | JSON 写坏了（多逗号/少逗号/中文引号） | 用 json.tool 校验修复 |
-| 作业乱分组 / 没科目 | `subject` 填了 7 个字以外的内容 | 改成标准科目名 |
-| 勾选进度和昨天串了 | `key` 没换新 | 改成当天日期格式 |
-| 某天作业凭空多/少 | `latest.json` 忘更新 | 重新覆盖 `latest.json` |
-| 照片不显示 | `photo` 路径填错或照片没上传 | 核对路径一字不差 |
+依赖：Android SDK（build-tools 34、platform android-34）、JDK 17。产物为 `apk/作业清单.apk`，签名使用固定 keystore，可覆盖升级安装。
 
 ---
 
-## 🛠 部署说明
+## 许可
 
-- 托管：**GitHub Pages**（Source = main 分支，仓库根目录）。
-- 推送后约 1-2 分钟自动生效。
-- 域名：`https://tyeod-yomuh.github.io/homework-list/`
-- 仓库：`tyeod-yomuh/homework-list`
-
----
-
-## 🧩 技术要点（给想改代码的人）
-
-- 纯前端 HTML + CSS + JavaScript，无框架，无后端，数据全靠 `fetch('data/latest.json?v='+Date.now())` 读取（加时间戳防缓存）。
-- 科目分组顺序常量：`语文 → 数学 → 英语 → 历史 → 政治 → 化学 → 物理`。
-- 推荐逻辑：`mode='group'`（同科优先，默认）/ `'random'` / 指定科目 `pickSubject`；"完成它 ✓ / 跳过它 ⏭"按钮在页面顶部推荐区。
-- 勾选进度存 `localStorage`，键名 = json 里的 `key`（每天换新即隔离）。
-- 照片显示：JSON `photo` 非空即显示「📷 作业原图」卡片。
-
----
-
-*每晚 21:00 自动更新 · 数据文件制存档 · 写作业快乐 🎧*
+[MIT](LICENSE)

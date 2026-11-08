@@ -1,0 +1,17 @@
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# 构建产物（APK 源码目录内的中间文件）
+apk/build/
+
+# 临时文件
+*.tmp
+*.log
