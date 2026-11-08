@@ -723,11 +723,32 @@
     render();
   }
 
-  /* 每天打开时：先尝试从 GitHub 拉最新作业 JSON */
-  fetch('https://raw.githubusercontent.com/tyeod-yomuh/homework-list/main/data/latest.json?v=' + Date.now())
-    .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
-    .then(function(d){ startApp(d); })
-    .catch(function(){ startApp(FALLBACK); });
+  /* 每天打开时：多源尝试拉取最新作业 JSON（国内网络 raw 常不可达，先走 CDN） */
+  var SOURCES = [
+    'https://cdn.jsdelivr.net/gh/tyeod-yomuh/homework-list@main/data/latest.json',
+    'https://raw.githubusercontent.com/tyeod-yomuh/homework-list/main/data/latest.json',
+    'https://tyeod-yomuh.github.io/homework-list/data/latest.json'
+  ];
+
+  function timeoutPromise(ms){
+    return new Promise(function(_, rej){ setTimeout(function(){ rej(new Error('timeout')); }, ms); });
+  }
+
+  function trySource(i){
+    if (i >= SOURCES.length){ startApp(FALLBACK); return; }
+    var url = SOURCES[i] + '?v=' + Date.now();
+    Promise.race([
+      fetch(url, { cache: 'no-store' }).then(function(r){
+        if(!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      }),
+      timeoutPromise(9000)
+    ]).then(function(d){
+      if (d && d.items && d.items.length) { startApp(d); }
+      else { trySource(i + 1); }
+    }).catch(function(){ trySource(i + 1); });
+  }
+  trySource(0);
 
 })();
 </script>
