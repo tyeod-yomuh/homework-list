@@ -1,32 +1,22 @@
 {
-  "date": "2026-11-08",
-  "label": "11月8日 周日",
-  "key": "hw-list-2026-11-08",
-  "photo": "photos/2026-11-08.jpg",
+  "date": "2026-11-16",
+  "label": "11月16日 周一",
+  "key": "hw-list-2026-11-16",
+  "photo": "",
   "items": [
     {
-      "text": "试卷一张",
-      "subject": "化学",
+      "text": "基础训练 89 页",
+      "subject": "语文",
       "done": false
     },
     {
-      "text": "试卷一张",
-      "subject": "物理",
+      "text": "课文：熟记注释一遍",
+      "subject": "语文",
       "done": false
     },
     {
-      "text": "期中试卷",
-      "subject": "历史",
-      "done": false
-    },
-    {
-      "text": "半张试卷",
-      "subject": "英语",
-      "done": false
-    },
-    {
-      "text": "抄一背 Page 44",
-      "subject": "英语",
+      "text": "课文：原文一遍",
+      "subject": "语文",
       "done": false
     },
     {
@@ -35,22 +25,32 @@
       "done": false
     },
     {
-      "text": "作文",
-      "subject": "语文",
-      "done": false
-    },
-    {
-      "text": "试卷（写完）",
-      "subject": "语文",
-      "done": false
-    },
-    {
-      "text": "一张试卷",
+      "text": "基础训练 两页",
       "subject": "数学",
       "done": false
     },
     {
-      "text": "45~46 页",
+      "text": "基础训练 一课 + 12 个短语",
+      "subject": "英语",
+      "done": false
+    },
+    {
+      "text": "课本 48 页 2A、2B、2C",
+      "subject": "英语",
+      "done": false
+    },
+    {
+      "text": "抄一背 Page 46 第一段",
+      "subject": "英语",
+      "done": false
+    },
+    {
+      "text": "基础训练 58~59 页",
+      "subject": "物理",
+      "done": false
+    },
+    {
+      "text": "基础训练 50~52 页",
       "subject": "政治",
       "done": false
     }
