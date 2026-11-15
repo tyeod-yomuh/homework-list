@@ -1,7 +1,7 @@
 {
-  "date": "2026-11-16",
-  "label": "11月16日 周一",
-  "key": "hw-list-2026-11-16",
+  "date": "2026-11-15",
+  "label": "11月15日 周日",
+  "key": "hw-list-2026-11-15",
   "photo": "",
   "items": [
     {
@@ -10,27 +10,27 @@
       "done": false
     },
     {
-      "text": "课文：熟记注释一遍",
+      "text": "新学的文言文抄一遍",
       "subject": "语文",
       "done": false
     },
     {
-      "text": "课文：原文一遍",
+      "text": "注释抄一遍",
       "subject": "语文",
       "done": false
     },
     {
-      "text": "采蜜本",
-      "subject": "语文",
-      "done": false
-    },
-    {
-      "text": "基础训练 两页",
+      "text": "基础训练 往后写两页",
       "subject": "数学",
       "done": false
     },
     {
-      "text": "基础训练 一课 + 12 个短语",
+      "text": "基础训练 往后写一课",
+      "subject": "英语",
+      "done": false
+    },
+    {
+      "text": "12 个短语",
       "subject": "英语",
       "done": false
     },
@@ -40,7 +40,12 @@
       "done": false
     },
     {
-      "text": "抄一背 Page 46 第一段",
+      "text": "抄写 46 页文章第一段",
+      "subject": "英语",
+      "done": false
+    },
+    {
+      "text": "彩泥本",
       "subject": "英语",
       "done": false
     },
@@ -50,7 +55,17 @@
       "done": false
     },
     {
+      "text": "订正试卷",
+      "subject": "历史",
+      "done": false
+    },
+    {
       "text": "基础训练 50~52 页",
+      "subject": "政治",
+      "done": false
+    },
+    {
+      "text": "订正试卷",
       "subject": "政治",
       "done": false
     }
