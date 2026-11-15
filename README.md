@@ -80,7 +80,13 @@ python3 scripts/validate_data.py --strict
 git add -A && git commit -m "update: 作业清单 M/D 周X" && git push origin main
 ```
 
-7. GitHub Pages 约 1–2 分钟自动更新
+7. 刷新 CDN 缓存（**必做**，否则 App 第一源 jsDelivr 会返回几天前的旧数据）：
+
+```bash
+bash scripts/purge_cdn.sh
+```
+
+8. GitHub Pages 约 1–2 分钟自动更新
 
 ---
 
