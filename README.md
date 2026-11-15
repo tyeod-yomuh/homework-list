@@ -94,11 +94,13 @@ bash scripts/purge_cdn.sh
 
 网页与 App 按顺序尝试，任一成功即渲染，全部失败才用内置兜底数据：
 
-1. `https://cdn.jsdelivr.net/gh/tyeod-yomuh/homework-list@main/data/latest.json`
-2. `https://raw.githubusercontent.com/tyeod-yomuh/homework-list/main/data/latest.json`
-3. `https://tyeod-yomuh.github.io/homework-list/data/latest.json`
+1. `https://tyeod-yomuh.github.io/homework-list/data/latest.json`（Pages，稳定）
+2. `https://raw.githubusercontent.com/tyeod-yomuh/homework-list/main/data/latest.json`（Raw，最快）
+3. `https://cdn.jsdelivr.net/gh/tyeod-yomuh/homework-list@main/data/latest.json`（CDN，仅作兜底）
 
-每个源超时 9 秒后自动切换下一个。
+每个源超时 9 秒后自动切换下一个，并且**拒绝比上次拉到的更旧的日期**，防止 CDN 缓存旧数据把新数据顶掉。
+
+> 历史教训：jsDelivr 对 `@main` 的缓存最长可达 12 小时，`purge` 接口也不保证即时生效，因此不再让它做第一源。
 
 ---
 

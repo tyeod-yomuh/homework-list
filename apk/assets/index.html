@@ -728,9 +728,9 @@
 
   /* 每天打开时：多源尝试拉取最新作业 JSON（国内网络 raw 常不可达，先走 CDN） */
   var SOURCES = [
-    'https://cdn.jsdelivr.net/gh/tyeod-yomuh/homework-list@main/data/latest.json',
+    'https://tyeod-yomuh.github.io/homework-list/data/latest.json',
     'https://raw.githubusercontent.com/tyeod-yomuh/homework-list/main/data/latest.json',
-    'https://tyeod-yomuh.github.io/homework-list/data/latest.json'
+    'https://cdn.jsdelivr.net/gh/tyeod-yomuh/homework-list@main/data/latest.json'
   ];
 
   function timeoutPromise(ms){
@@ -747,8 +747,12 @@
       }),
       timeoutPromise(9000)
     ]).then(function(d){
-      if (d && d.items && d.items.length) { startApp(d); }
-      else { trySource(i + 1); }
+      if (!d || !d.items || !d.items.length) { trySource(i + 1); return; }
+      /* 防 CDN 缓存旧数据：date 比上次成功拉到的更旧，就换下一个源 */
+      var prev = sGet('hw-last-date') || '';
+      if (prev && d.date && d.date < prev) { trySource(i + 1); return; }
+      sSet('hw-last-date', d.date || '');
+      startApp(d);
     }).catch(function(){ trySource(i + 1); });
   }
   trySource(0);
