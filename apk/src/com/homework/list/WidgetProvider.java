@@ -158,8 +158,10 @@ public class WidgetProvider extends AppWidgetProvider {
             Set<String> done = sp.getStringSet("done", new HashSet<String>());
             int cur = sp.getInt("cur", 0);
 
-            // App 端勾选同步后，cur 可能指向已完成项：自动推进到下一个未完成
-            if (n > 0 && cur >= 0 && done.contains(String.valueOf(cur)) && done.size() < n) {
+            // 完成状态变化后校正指针：
+            // 1) cur 指向的项被完成了 → 推进到下一个未完成
+            // 2) 曾全部完成(cur=-1)后又取消了勾选 → 恢复到第一个未完成
+            if (n > 0 && done.size() < n && (cur < 0 || done.contains(String.valueOf(cur)))) {
                 cur = findNext(done, cur, n);
                 sp.edit().putInt("cur", cur).apply();
             }
