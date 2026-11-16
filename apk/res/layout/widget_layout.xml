@@ -5,73 +5,76 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/widget_bg"
-    android:padding="10dp"
+    android:padding="12dp"
     android:gravity="center_vertical">
 
     <TextView
         android:id="@+id/w_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="#FFFFFF"
-        android:textSize="15sp"
-        android:textStyle="bold"
+        android:textColor="#8A8F9E"
+        android:textSize="12sp"
         android:maxLines="1"
         android:ellipsize="end"
         android:text="作业清单" />
 
     <TextView
-        android:id="@+id/w_i1"
+        android:id="@+id/w_current"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="#E8E8E8"
-        android:textSize="12sp"
-        android:maxLines="1"
-        android:ellipsize="end"
-        android:text="" />
-
-    <TextView
-        android:id="@+id/w_i2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#E8E8E8"
-        android:textSize="12sp"
-        android:maxLines="1"
-        android:ellipsize="end"
-        android:text="" />
-
-    <TextView
-        android:id="@+id/w_i3"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#E8E8E8"
-        android:textSize="12sp"
-        android:maxLines="1"
-        android:ellipsize="end"
-        android:text="" />
-
-    <TextView
-        android:id="@+id/w_i4"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#E8E8E8"
-        android:textSize="12sp"
-        android:maxLines="1"
-        android:ellipsize="end"
-        android:text="" />
-
-    <TextView
-        android:id="@+id/w_random"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/widget_random_bg"
-        android:paddingTop="6dp"
-        android:paddingBottom="6dp"
-        android:paddingLeft="8dp"
-        android:paddingRight="8dp"
-        android:textColor="#4FC3F7"
-        android:textSize="13sp"
+        android:layout_marginTop="6dp"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
         android:textStyle="bold"
-        android:maxLines="2"
+        android:maxLines="3"
         android:ellipsize="end"
-        android:text="🎲 随机抽一个作业" />
+        android:text="加载中…" />
+
+    <TextView
+        android:id="@+id/w_progress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="#8A8F9E"
+        android:textSize="11sp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:text="" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/w_btn_done"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:background="@drawable/widget_done_bg"
+            android:gravity="center"
+            android:paddingTop="7dp"
+            android:paddingBottom="7dp"
+            android:textColor="#4ADE80"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:text="✅ 已完成" />
+
+        <TextView
+            android:id="@+id/w_btn_skip"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/widget_random_bg"
+            android:gravity="center"
+            android:paddingTop="7dp"
+            android:paddingBottom="7dp"
+            android:textColor="#4FC3F7"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:text="⏭ 跳过" />
+    </LinearLayout>
 </LinearLayout>

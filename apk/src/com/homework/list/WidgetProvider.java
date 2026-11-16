@@ -7,7 +7,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.view.View;
 import android.widget.RemoteViews;
 
 import org.json.JSONArray;
@@ -17,11 +16,15 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Random;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * 桌面小组件：显示当天作业（内置兜底数据，断网也不空白），
- * 底部"随机抽一个作业"按钮，点击随机挑一项显示；点击其余区域打开 App。
+ * 桌面小组件（抽卡模式）：一次只显示一项"下一个该写的作业"。
+ * 「已完成」：标记当前项完成，推进到下一个未完成项；
+ * 「跳过」：不标记，直接换下一项。
+ * 每 30 分钟系统自动刷新拉取最新数据；新的一天（key 变化）自动清空完成状态。
+ * 完成状态存在小组件自己的存储里，与 App 内勾选互不干扰。
  */
 public class WidgetProvider extends AppWidgetProvider {
 
@@ -30,51 +33,65 @@ public class WidgetProvider extends AppWidgetProvider {
         "https://raw.githubusercontent.com/tyeod-yomuh/homework-list/main/data/latest.json?v="
     };
     private static final String PREFS = "hw_widget_cache";
-    public static final String ACTION_RANDOM = "com.homework.list.ACTION_RANDOM";
+    public static final String ACTION_DONE = "com.homework.list.ACTION_DONE";
+    public static final String ACTION_SKIP = "com.homework.list.ACTION_SKIP";
 
-    /** 断网兜底：与 App 内置一致（最近一次作业） */
+    /** 断网兜底：与 App 内置一致（最近一次作业），发布时同步更新 */
     private static final String FALLBACK_JSON =
-        "{\"date\":\"2026-11-17\",\"label\":\"11月17日 周二\",\"key\":\"hw-list-2026-11-17\",\"photo\":\"\",\"items\":[" +
-        "{\"text\":\"27 课前两首诗 各抄两遍\",\"subject\":\"语文\",\"done\":false}," +
-        "{\"text\":\"订正答题卡\",\"subject\":\"语文\",\"done\":false}," +
-        "{\"text\":\"往后写两页\",\"subject\":\"数学\",\"done\":false}," +
-        "{\"text\":\"抄一背 第二段\",\"subject\":\"英语\",\"done\":false}," +
-        "{\"text\":\"课本 96~97 页\",\"subject\":\"物理\",\"done\":false}," +
-        "{\"text\":\"作业 45~46 页\",\"subject\":\"化学\",\"done\":false}," +
-        "{\"text\":\"考试总结 500 字一篇\",\"subject\":\"其他\",\"done\":false}" +
-        "]}";
+        "{\"date\":\"2026-11-17\",\"label\":\"11月17日 周二\",\"key\":\"hw-list-2026-11-17\",\"photo\":\"\",\"items\":[{\"text\":\"27 课前两首诗 各抄两遍\",\"subject\":\"语文\",\"done\":false},{\"text\":\"订正答题卡\",\"subject\":\"语文\",\"done\":false},{\"text\":\"往后写两页\",\"subject\":\"数学\",\"done\":false},{\"text\":\"抄一背 第二段\",\"subject\":\"英语\",\"done\":false},{\"text\":\"课本 96~97 页\",\"subject\":\"物理\",\"done\":false},{\"text\":\"作业 45~46 页\",\"subject\":\"化学\",\"done\":false},{\"text\":\"考试总结 500 字一篇\",\"subject\":\"其他\",\"done\":false}]}";
 
     @Override
     public void onUpdate(Context context, AppWidgetManager mgr, int[] ids) {
-        for (int id : ids) {
-            refreshData(context, id, null);
-        }
+        refreshData(context);
     }
 
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
-        if (ACTION_RANDOM.equals(intent.getAction())) {
-            // 随机抽一个：先保证有数据（有缓存用缓存，没有就用兜底），再随机显示
-            SharedPreferences sp = context.getSharedPreferences(PREFS, 0);
-            String json = sp.getString("data", null);
-            if (json == null) {
-                json = FALLBACK_JSON;
-                sp.edit().putString("data", json).apply();
+        String action = intent.getAction();
+        if (!ACTION_DONE.equals(action) && !ACTION_SKIP.equals(action)) return;
+
+        SharedPreferences sp = context.getSharedPreferences(PREFS, 0);
+        String json = sp.getString("data", null);
+        if (json == null) json = FALLBACK_JSON;
+
+        try {
+            JSONObject d = new JSONObject(json);
+            JSONArray items = d.optJSONArray("items");
+            int n = items == null ? 0 : items.length();
+            int cur = sp.getInt("cur", 0);
+            if (n > 0 && cur >= 0) {
+                Set<String> done = new HashSet<String>(sp.getStringSet("done", new HashSet<String>()));
+                if (ACTION_DONE.equals(action)) done.add(String.valueOf(cur));
+                int next = findNext(done, cur, n);
+                sp.edit().putStringSet("done", done).putInt("cur", next).apply();
             }
-            AppWidgetManager mgr = AppWidgetManager.getInstance(context);
-            ComponentName cn = new ComponentName(context, WidgetProvider.class);
-            for (int id : mgr.getAppWidgetIds(cn)) {
-                render(context, mgr, id, json, true);
-            }
+        } catch (Exception ignored) {
+        }
+
+        AppWidgetManager mgr = AppWidgetManager.getInstance(context);
+        ComponentName cn = new ComponentName(context, WidgetProvider.class);
+        for (int id : mgr.getAppWidgetIds(cn)) {
+            render(context, mgr, id);
         }
     }
 
-    /** 拉取最新数据（成功存缓存），然后用缓存/兜底渲染 */
-    private static void refreshData(final Context ctx, final int id, final String randomText) {
+    /** 从 cur+1 起找下一个未完成项；全部完成返回 -1 */
+    private static int findNext(Set<String> done, int cur, int n) {
+        if (done.size() >= n) return -1;
+        for (int step = 1; step <= n; step++) {
+            int i = (cur + step) % n;
+            if (!done.contains(String.valueOf(i))) return i;
+        }
+        return -1;
+    }
+
+    /** 拉取最新数据（成功存缓存）；新的一天重置完成状态 */
+    private static void refreshData(final Context ctx) {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                SharedPreferences sp = ctx.getSharedPreferences(PREFS, 0);
                 String json = null;
                 for (int u = 0; u < DATA_URLS.length && json == null; u++) {
                     try {
@@ -87,79 +104,88 @@ public class WidgetProvider extends AppWidgetProvider {
                             String line;
                             while ((line = r.readLine()) != null) sb.append(line);
                             json = sb.toString();
-                            ctx.getSharedPreferences(PREFS, 0).edit().putString("data", json).apply();
                         }
-                    } catch (Exception e) {
+                    } catch (Exception ignored) {
                         // 这个源失败，试下一个
                     }
                 }
-                if (json == null) {
-                    json = ctx.getSharedPreferences(PREFS, 0).getString("data", null);
-                    if (json == null) {
-                        json = FALLBACK_JSON;
-                        ctx.getSharedPreferences(PREFS, 0).edit().putString("data", json).apply();
+                if (json != null) {
+                    try {
+                        String newKey = new JSONObject(json).optString("key", "");
+                        String oldKey = sp.getString("data_key", "");
+                        SharedPreferences.Editor e = sp.edit().putString("data", json);
+                        if (!newKey.equals(oldKey)) {
+                            e.putString("data_key", newKey);
+                            e.putStringSet("done", new HashSet<String>());
+                            e.putInt("cur", 0);
+                        }
+                        e.apply();
+                    } catch (Exception ignored) {
                     }
                 }
-                render(ctx, AppWidgetManager.getInstance(ctx), id, json, false);
+                AppWidgetManager mgr = AppWidgetManager.getInstance(ctx);
+                ComponentName cn = new ComponentName(ctx, WidgetProvider.class);
+                for (int id : mgr.getAppWidgetIds(cn)) {
+                    render(ctx, mgr, id);
+                }
             }
         }).start();
     }
 
-    /** 渲染小组件；pickRandom=true 时把随机抽取结果显示在 w_random */
-    private static void render(Context ctx, AppWidgetManager mgr, int id, String json, boolean pickRandom) {
+    /** 渲染：标题 + 当前项（大字） + 进度 + 两个按钮 */
+    private static void render(Context ctx, AppWidgetManager mgr, int id) {
+        SharedPreferences sp = ctx.getSharedPreferences(PREFS, 0);
+        String json = sp.getString("data", null);
+        if (json == null) json = FALLBACK_JSON;
+
         RemoteViews rv = new RemoteViews(ctx.getPackageName(), R.layout.widget_layout);
         try {
             JSONObject d = new JSONObject(json);
             JSONArray items = d.optJSONArray("items");
             int n = items == null ? 0 : items.length();
-            rv.setTextViewText(R.id.w_title, d.optString("label", "作业清单") + " · 共" + n + "项");
+            Set<String> done = sp.getStringSet("done", new HashSet<String>());
+            int cur = sp.getInt("cur", 0);
 
-            int[] ids = {R.id.w_i1, R.id.w_i2, R.id.w_i3, R.id.w_i4};
-            for (int i = 0; i < ids.length; i++) {
-                if (i < n) {
-                    JSONObject it = items.optJSONObject(i);
-                    String subj = it == null ? "" : it.optString("subject", "");
-                    String text = it == null ? "" : it.optString("text", "");
-                    rv.setTextViewText(ids[i], subj + " " + text);
-                    rv.setViewVisibility(ids[i], View.VISIBLE);
-                } else {
-                    rv.setViewVisibility(ids[i], View.GONE);
-                }
-            }
+            rv.setTextViewText(R.id.w_title, d.optString("label", "作业清单"));
 
-            if (pickRandom && n > 0) {
-                JSONObject pick = items.optJSONObject(new Random().nextInt(n));
-                String subj = pick == null ? "" : pick.optString("subject", "");
-                String text = pick == null ? "" : pick.optString("text", "");
-                rv.setTextViewText(R.id.w_random, "🎲 " + subj + " " + text + "   （再点换一个）");
+            if (n == 0) {
+                rv.setTextViewText(R.id.w_current, "今天没有作业");
+                rv.setTextViewText(R.id.w_progress, "");
+            } else if (cur < 0 || done.size() >= n) {
+                rv.setTextViewText(R.id.w_current, "全部写完了 🎉");
+                rv.setTextViewText(R.id.w_progress, n + " / " + n + " 项");
             } else {
-                rv.setTextViewText(R.id.w_random, "🎲 随机抽一个作业");
+                if (cur >= n) cur = 0;
+                JSONObject it = items.optJSONObject(cur);
+                String subj = it == null ? "" : it.optString("subject", "");
+                String text = it == null ? "" : it.optString("text", "");
+                rv.setTextViewText(R.id.w_current, "【" + subj + "】" + text);
+                rv.setTextViewText(R.id.w_progress, "第 " + (cur + 1) + " / " + n + " 项 · 已完成 " + done.size() + " 项");
             }
         } catch (Exception e) {
             rv.setTextViewText(R.id.w_title, "作业清单");
-            rv.setTextViewText(R.id.w_random, "🎲 随机抽一个作业");
-            for (int i : new int[]{R.id.w_i1, R.id.w_i2, R.id.w_i3, R.id.w_i4}) {
-                rv.setViewVisibility(i, View.GONE);
-            }
+            rv.setTextViewText(R.id.w_current, "点「跳过」试试");
+            rv.setTextViewText(R.id.w_progress, "");
         }
 
-        // 随机按钮：点击发广播，抽一个
-        Intent rand = new Intent(ctx, WidgetProvider.class);
-        rand.setAction(ACTION_RANDOM);
-        PendingIntent rpi = PendingIntent.getBroadcast(ctx, 1, rand,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        rv.setOnClickPendingIntent(R.id.w_random, rpi);
+        Intent doneI = new Intent(ctx, WidgetProvider.class);
+        doneI.setAction(ACTION_DONE);
+        rv.setOnClickPendingIntent(R.id.w_btn_done, PendingIntent.getBroadcast(ctx, 1, doneI,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));
 
-        // 其余区域：打开 App
+        Intent skipI = new Intent(ctx, WidgetProvider.class);
+        skipI.setAction(ACTION_SKIP);
+        rv.setOnClickPendingIntent(R.id.w_btn_skip, PendingIntent.getBroadcast(ctx, 2, skipI,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));
+
+        // 点当前作业区域：打开 App
         Intent open = new Intent(ctx, MainActivity.class);
-        PendingIntent pi = PendingIntent.getActivity(ctx, 0, open,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        rv.setOnClickPendingIntent(R.id.widget_root, pi);
+        rv.setOnClickPendingIntent(R.id.w_current, PendingIntent.getActivity(ctx, 0, open,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));
 
         try {
             mgr.updateAppWidget(id, rv);
-        } catch (Exception e) {
-            // 忽略更新异常
+        } catch (Exception ignored) {
         }
     }
 }

@@ -3,6 +3,14 @@ set -e
 SDK=/home/user/android-sdk
 BT=$SDK/build-tools/34.0.0
 AJ=$SDK/platforms/android-34/android.jar
+
+# 版本号标准化：每次打包 versionCode 自动 +1，versionName 用当天日期，保证可直接覆盖安装
+VC=$(grep -o 'android:versionCode="[0-9]*"' AndroidManifest.xml | grep -o '[0-9]*')
+VC=$((VC + 1))
+VN=$(date +%Y.%-m.%-d)
+sed -i "s/android:versionCode=\"[0-9]*\"/android:versionCode=\"$VC\"/; s/android:versionName=\"[^\"]*\"/android:versionName=\"$VN\"/" AndroidManifest.xml
+echo "[0/7] 版本号 → v$VN ($VC)"
+
 rm -rf build && mkdir -p build/classes build/dexout build/gen
 
 echo "[1/7] aapt2 compile 资源..."
