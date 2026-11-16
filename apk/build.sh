@@ -3,16 +3,16 @@ set -e
 SDK=/home/user/android-sdk
 BT=$SDK/build-tools/34.0.0
 AJ=$SDK/platforms/android-34/android.jar
-rm -rf build && mkdir -p build/classes build/dexout
+rm -rf build && mkdir -p build/classes build/dexout build/gen
 
 echo "[1/7] aapt2 compile 资源..."
 $BT/aapt2 compile --dir res -o build/compiled.zip
 
 echo "[2/7] aapt2 link 打包（含 assets）..."
-$BT/aapt2 link -o build/app-unsigned.apk -I $AJ --manifest AndroidManifest.xml -A assets build/compiled.zip
+$BT/aapt2 link -o build/app-unsigned.apk -I $AJ --manifest AndroidManifest.xml -A assets --java build/gen build/compiled.zip
 
 echo "[3/7] javac 编译 Java..."
-/home/user/jdk-17.0.20.1+1/bin/javac -source 8 -target 8 -classpath $AJ -d build/classes src/com/homework/list/MainActivity.java
+/home/user/jdk-17.0.20.1+1/bin/javac -source 8 -target 8 -classpath $AJ -d build/classes build/gen/com/homework/list/R.java src/com/homework/list/*.java
 
 echo "[4/7] d8 转 dex..."
 $BT/d8 --release --lib $AJ --output build/dexout build/classes/com/homework/list/*.class

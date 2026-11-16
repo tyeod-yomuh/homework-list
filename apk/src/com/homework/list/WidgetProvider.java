@@ -25,22 +25,23 @@ import java.util.Random;
  */
 public class WidgetProvider extends AppWidgetProvider {
 
-    private static final String DATA_URL = "https://raw.githubusercontent.com/tyeod-yomuh/homework-list/main/data/latest.json?v=";
+    private static final String[] DATA_URLS = {
+        "https://tyeod-yomuh.github.io/homework-list/data/latest.json?v=",
+        "https://raw.githubusercontent.com/tyeod-yomuh/homework-list/main/data/latest.json?v="
+    };
     private static final String PREFS = "hw_widget_cache";
     public static final String ACTION_RANDOM = "com.homework.list.ACTION_RANDOM";
 
     /** 断网兜底：与 App 内置一致（最近一次作业） */
     private static final String FALLBACK_JSON =
-        "{\"date\":\"2026-10-21\",\"label\":\"10月21日 周三\",\"key\":\"hw-list-2026-10-21\",\"photo\":\"\",\"items\":[" +
-        "{\"text\":\"基础训练往后写一页\",\"subject\":\"数学\",\"done\":false}," +
-        "{\"text\":\"作文\",\"subject\":\"英语\",\"done\":false}," +
-        "{\"text\":\"听写\",\"subject\":\"英语\",\"done\":false}," +
-        "{\"text\":\"背诵\",\"subject\":\"英语\",\"done\":false}," +
-        "{\"text\":\"抄文章最后一段\",\"subject\":\"英语\",\"done\":false}," +
-        "{\"text\":\"抄单词\",\"subject\":\"英语\",\"done\":false}," +
-        "{\"text\":\"往后写一课\",\"subject\":\"历史\",\"done\":false}," +
-        "{\"text\":\"试卷 38、39\",\"subject\":\"化学\",\"done\":false}," +
-        "{\"text\":\"试卷反面写完\",\"subject\":\"物理\",\"done\":false}" +
+        "{\"date\":\"2026-11-17\",\"label\":\"11月17日 周二\",\"key\":\"hw-list-2026-11-17\",\"photo\":\"\",\"items\":[" +
+        "{\"text\":\"27 课前两首诗 各抄两遍\",\"subject\":\"语文\",\"done\":false}," +
+        "{\"text\":\"订正答题卡\",\"subject\":\"语文\",\"done\":false}," +
+        "{\"text\":\"往后写两页\",\"subject\":\"数学\",\"done\":false}," +
+        "{\"text\":\"抄一背 第二段\",\"subject\":\"英语\",\"done\":false}," +
+        "{\"text\":\"课本 96~97 页\",\"subject\":\"物理\",\"done\":false}," +
+        "{\"text\":\"作业 45~46 页\",\"subject\":\"化学\",\"done\":false}," +
+        "{\"text\":\"考试总结 500 字一篇\",\"subject\":\"其他\",\"done\":false}" +
         "]}";
 
     @Override
@@ -75,20 +76,22 @@ public class WidgetProvider extends AppWidgetProvider {
             @Override
             public void run() {
                 String json = null;
-                try {
-                    HttpURLConnection c = (HttpURLConnection) new URL(DATA_URL + System.currentTimeMillis()).openConnection();
-                    c.setConnectTimeout(8000);
-                    c.setReadTimeout(8000);
-                    if (c.getResponseCode() == 200) {
-                        BufferedReader r = new BufferedReader(new InputStreamReader(c.getInputStream(), "UTF-8"));
-                        StringBuilder sb = new StringBuilder();
-                        String line;
-                        while ((line = r.readLine()) != null) sb.append(line);
-                        json = sb.toString();
-                        ctx.getSharedPreferences(PREFS, 0).edit().putString("data", json).apply();
+                for (int u = 0; u < DATA_URLS.length && json == null; u++) {
+                    try {
+                        HttpURLConnection c = (HttpURLConnection) new URL(DATA_URLS[u] + System.currentTimeMillis()).openConnection();
+                        c.setConnectTimeout(8000);
+                        c.setReadTimeout(8000);
+                        if (c.getResponseCode() == 200) {
+                            BufferedReader r = new BufferedReader(new InputStreamReader(c.getInputStream(), "UTF-8"));
+                            StringBuilder sb = new StringBuilder();
+                            String line;
+                            while ((line = r.readLine()) != null) sb.append(line);
+                            json = sb.toString();
+                            ctx.getSharedPreferences(PREFS, 0).edit().putString("data", json).apply();
+                        }
+                    } catch (Exception e) {
+                        // 这个源失败，试下一个
                     }
-                } catch (Exception e) {
-                    // 网络失败，走缓存/兜底
                 }
                 if (json == null) {
                     json = ctx.getSharedPreferences(PREFS, 0).getString("data", null);

@@ -65,6 +65,11 @@ homework-list/
 python3 scripts/validate_data.py --strict
 ```
 
+- **每次发布新数据时，兜底数据要同步 3 处**（漏一处就会出现"显示旧作业"）：
+  1. `apk/assets/index.html` 的 `var FALLBACK`（App WebView 离线兜底）
+  2. 独立构建目录 `homework-apk/assets/index.html` 的 `var FALLBACK`
+  3. `apk/src/.../WidgetProvider.java` 的 `FALLBACK_JSON`（**桌面小组件**断网兜底，容易漏）
+
 ---
 
 ## 每日更新流程
