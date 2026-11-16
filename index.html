@@ -60,7 +60,7 @@
     padding: clamp(18px, 4.8vw, 30px);
     animation: cardIn .45s cubic-bezier(.2, .8, .2, 1);
   }
-  @keyframes cardIn { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: none; } }
+  @keyframes cardIn { from { transform: translateY(10px) scale(.985); } to { transform: none; } }
 
   /* 仅在支持 backdrop-filter 的环境启用玻璃质感（部分浏览器/无 GPU 环境会渲染异常） */
   @supports ((-webkit-backdrop-filter: blur(2px)) or (backdrop-filter: blur(2px))) {
@@ -120,7 +120,7 @@
     animation: fadeIn .3s ease;
     transition: background-color .2s ease, border-color .2s ease, opacity .2s ease;
   }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+  @keyframes fadeIn { from { transform: translateY(-4px); } to { transform: none; } }
   li:active { background: rgba(255, 255, 255, 0.06); }
 
   .check {
@@ -355,6 +355,9 @@
   @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; }
   }
+
+  /* 兜底：任何情况下都确保内容可见（动画若被暂停/不执行，不能卡在透明状态） */
+  .card, li { opacity: 1; }
 </style>
 </head>
 <body>
