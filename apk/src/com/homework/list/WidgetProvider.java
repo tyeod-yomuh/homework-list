@@ -35,6 +35,7 @@ public class WidgetProvider extends AppWidgetProvider {
     private static final String PREFS = "hw_widget_cache";
     public static final String ACTION_DONE = "com.homework.list.ACTION_DONE";
     public static final String ACTION_SKIP = "com.homework.list.ACTION_SKIP";
+    public static final String ACTION_SYNC = "com.homework.list.ACTION_SYNC";
 
     /** 断网兜底：与 App 内置一致（最近一次作业），发布时同步更新 */
     private static final String FALLBACK_JSON =
@@ -49,6 +50,17 @@ public class WidgetProvider extends AppWidgetProvider {
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
         String action = intent.getAction();
+
+        // App 端勾选状态同步过来：只按最新状态重绘，不重拉数据
+        if (ACTION_SYNC.equals(action)) {
+            AppWidgetManager mgr = AppWidgetManager.getInstance(context);
+            ComponentName cn = new ComponentName(context, WidgetProvider.class);
+            for (int id : mgr.getAppWidgetIds(cn)) {
+                render(context, mgr, id);
+            }
+            return;
+        }
+
         if (!ACTION_DONE.equals(action) && !ACTION_SKIP.equals(action)) return;
 
         SharedPreferences sp = context.getSharedPreferences(PREFS, 0);
@@ -146,6 +158,12 @@ public class WidgetProvider extends AppWidgetProvider {
             Set<String> done = sp.getStringSet("done", new HashSet<String>());
             int cur = sp.getInt("cur", 0);
 
+            // App 端勾选同步后，cur 可能指向已完成项：自动推进到下一个未完成
+            if (n > 0 && cur >= 0 && done.contains(String.valueOf(cur)) && done.size() < n) {
+                cur = findNext(done, cur, n);
+                sp.edit().putInt("cur", cur).apply();
+            }
+
             rv.setTextViewText(R.id.w_title, d.optString("label", "作业清单"));
 
             if (n == 0) {
@@ -178,9 +196,9 @@ public class WidgetProvider extends AppWidgetProvider {
         rv.setOnClickPendingIntent(R.id.w_btn_skip, PendingIntent.getBroadcast(ctx, 2, skipI,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));
 
-        // 点当前作业区域：打开 App
+        // 点小组件空白区域（除两个按钮外的整面）：打开 App
         Intent open = new Intent(ctx, MainActivity.class);
-        rv.setOnClickPendingIntent(R.id.w_current, PendingIntent.getActivity(ctx, 0, open,
+        rv.setOnClickPendingIntent(R.id.widget_root, PendingIntent.getActivity(ctx, 0, open,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));
 
         try {

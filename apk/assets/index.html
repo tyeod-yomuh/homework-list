@@ -334,7 +334,20 @@
   /* 安全存储：有些手机浏览器在本地打开文件时会禁用 localStorage，直接访问会抛错把页面卡死，这里全部包 try */
   function sGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
   function sSet(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
-  function save(){ sSet(KEY, JSON.stringify(items)); }
+  function save(){
+    sSet(KEY, JSON.stringify(items));
+    syncDoneToWidget();
+  }
+
+  /* 勾选状态同步给桌面小组件（原生桥存在时；wid = 条目在当天服务器数据里的下标） */
+  function syncDoneToWidget(){
+    if(!window.HWBridge) return;
+    try {
+      var arr = [];
+      items.forEach(function(it){ if(it.done && typeof it.wid === 'number' && it.wid >= 0) arr.push(String(it.wid)); });
+      HWBridge.setDone(JSON.stringify(arr));
+    } catch(e){}
+  }
   function buzz(ms){ if(navigator.vibrate){ try { navigator.vibrate(ms); } catch(e){} } }
 
   /* ---------------- 推荐逻辑 ---------------- */
@@ -695,11 +708,33 @@
     PHOTO = d.photo || '';
     document.querySelector('.date').textContent = d.label || '';
 
+    var serverItems = d.items || [];
     try { items = JSON.parse(sGet(KEY)) || null; } catch(e) { items = null; }
     if(!items){
-      items = d.items || [];
-      save();
+      items = serverItems.map(function(it, i){
+        return { text: it.text, subject: it.subject, done: !!it.done, skipped: false, wid: i };
+      });
     }
+    /* 给历史缓存条目补 wid（按 内容+科目 对应到服务器数据下标），小组件按 wid 记完成状态 */
+    items.forEach(function(it){
+      if(typeof it.wid !== 'number'){
+        it.wid = -1;
+        for(var i = 0; i < serverItems.length; i++){
+          var s = serverItems[i];
+          if(s.text === it.text && (s.subject || '') === (it.subject || '')){ it.wid = i; break; }
+        }
+      }
+    });
+    /* 合并小组件完成状态：小组件上点过「已完成」的，这里也勾上 */
+    if(window.HWBridge){
+      try {
+        var wdone = JSON.parse(HWBridge.getDone() || '[]');
+        items.forEach(function(it){
+          if(it.wid >= 0 && wdone.indexOf(String(it.wid)) !== -1){ it.done = true; it.skipped = false; }
+        });
+      } catch(e){}
+    }
+    save();
 
     lastSubject = sGet(KEY + '-last') || '';
 
