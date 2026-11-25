@@ -4,11 +4,25 @@
   "key": "hw-list-2026-11-25",
   "photo": "",
   "items": [
-    { "text": "63-64页", "subject": "物理", "done": false },
-    { "text": "55、65页", "subject": "化学", "done": false },
-    { "text": "背听力原文2", "subject": "英语", "done": false },
-    { "text": "抄《陈涉世家》注释+原文1遍", "subject": "语文", "done": false },
-    { "text": "《基》后2页", "subject": "数学", "done": false },
-    { "text": "《基》21课", "subject": "历史", "done": false }
+    {
+      "text": "课本课后 P85-86",
+      "subject": "物理",
+      "done": false
+    },
+    {
+      "text": "一张试卷写完",
+      "subject": "化学",
+      "done": false
+    },
+    {
+      "text": "基训写完后往后写三页",
+      "subject": "数学",
+      "done": false
+    },
+    {
+      "text": "《基训》P57-59（P58第1题、P59第1、3题不写）",
+      "subject": "政治",
+      "done": false
+    }
   ]
 }
