@@ -39,7 +39,7 @@ public class WidgetProvider extends AppWidgetProvider {
 
     /** 断网兜底：与 App 内置一致（最近一次作业），发布时同步更新 */
     private static final String FALLBACK_JSON =
-        "{\"date\": \"2026-11-26\", \"label\": \"11月26日 周四\", \"key\": \"hw-list-2026-11-26\", \"photo\": \"\", \"items\": [{\"text\": \"107页 1、2、3题\", \"subject\": \"物理\", \"done\": false}, {\"text\": \"109页 4、5、6题\", \"subject\": \"物理\", \"done\": false}, {\"text\": \"基训 12个短语\", \"subject\": \"英语\", \"done\": false}, {\"text\": \"抄 on earth 等短语（英语书上）\", \"subject\": \"英语\", \"done\": false}, {\"text\": \"P53 第一课\", \"subject\": \"化学\", \"done\": false}, {\"text\": \"P91-93\", \"subject\": \"数学\", \"done\": false}, {\"text\": \"基训 单元小结\", \"subject\": \"历史\", \"done\": false}]}";
+        "{\"date\": \"2026-11-26\", \"label\": \"11月26日 周四\", \"key\": \"hw-list-2026-11-26\", \"photo\": \"\", \"items\": [{\"text\": \"107页 1、2、3题\", \"subject\": \"物理\", \"done\": false}, {\"text\": \"109页 4、5、6题\", \"subject\": \"物理\", \"done\": false}, {\"text\": \"基训 12个短语\", \"subject\": \"英语\", \"done\": false}, {\"text\": \"抄短语（抄到 on earth 为止）\", \"subject\": \"英语\", \"done\": false}, {\"text\": \"P53 第一课\", \"subject\": \"化学\", \"done\": false}, {\"text\": \"P91-93\", \"subject\": \"数学\", \"done\": false}, {\"text\": \"基训 Unit Seven 单元小结\", \"subject\": \"历史\", \"done\": false}]}";
 
     @Override
     public void onUpdate(Context context, AppWidgetManager mgr, int[] ids) {
